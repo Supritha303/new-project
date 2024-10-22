@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>the Chocolate House</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url("https://i.pinimg.com/originals/fd/0f/87/fd0f878e1f860d8abe90a405875ef590.jpg");
+            background-size: cover;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #8b4513;
+        }
+        form {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #8b4513;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #8b4513;
+            border-radius: 4px;
+        }
+        input[type="checkbox"] {
+            margin: 10px;
+        }
+        button {
+            background-color: #8b4513;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #a0522d;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .view-btn {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1><strong>Welcome to Chocolate House</strong></h1>
+    <h2> Flavors</h2>
+    <form id="add-flavor-form" onsubmit="addFlavor(event)">
+        <label for="flavor-name">Flavor Name:</label>
+        <input type="text" id="flavor-name" name="flavor-name" required>
+        <label for="seasonal">Seasonal:</label>
+        <input type="checkbox" id="seasonal" name="seasonal">
+        <button type="submit">Add Flavor</button>
+    </form>
+
+    <h2> Ingredients</h2>
+    <form id="add-ingredient-form" onsubmit="addIngredient(event)">
+        <label for="ingredient-name">Ingredient Name:</label>
+        <input type="text" id="ingredient-name" name="ingredient-name" required>
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" required>
+        <button type="submit">Add Ingredient</button>
+    </form>
+
+    <h2>Customer Suggestions</h2>
+    <form id="add-suggestion-form" onsubmit="addSuggestion(event)">
+        <label for="suggestion-flavor">Suggested Flavor:</label>
+        <input type="text" id="suggestion-flavor" name="suggestion-flavor" required>
+        <label for="allergies">Allergies (if any):</label>
+        <input type="text" id="allergies" name="allergies">
+        <button type="submit">Submit Suggestion</button>
+    </form>
+    <div id="message"></div>
+
+
+    <button class="view-btn" onclick="viewFlavors()">View Flavors</button>
+    <div id="flavors-list"></div>
+
+    <button class="view-btn" onclick="viewIngredients()">View Ingredients</button>
+    <div id="ingredients-list"></div>
+
+
+    <button class="view-btn" onclick="viewSuggestions()">View Suggestions</button>
+    <div id="suggestions-list"></div>
+
+    <script>
+        async function addFlavor(event) {
+            event.preventDefault();
+            const flavorName = document.getElementById('flavor-name').value.trim();
+            const seasonal = document.getElementById('seasonal').checked;
+
+            if (!flavorName) {
+                displayMessage('Flavor name cannot be empty!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/add_flavor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: flavorName, seasonal: seasonal })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to add flavor');
+                }
+                displayMessage(result.message || 'Flavor added successfully!', 'success');
+            } catch (error) {
+                displayMessage('An error occurred: ' + error.message, 'error');
+            }
+        }
+
+        async function addIngredient(event) {
+            event.preventDefault();
+            const ingredientName = document.getElementById('ingredient-name').value.trim();
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            if (!ingredientName || quantity <= 0) {
+                displayMessage('Invalid ingredient name or quantity!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/add_ingredient', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: ingredientName, quantity: quantity })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to add ingredient');
+                }
+                displayMessage(result.message || 'Ingredient added successfully!', 'success');
+            } catch (error) {
+                displayMessage('An error occurred: ' + error.message, 'error');
+            }
+        }
+
+        async function addSuggestion(event) {
+            event.preventDefault();
+            const flavor = document.getElementById('suggestion-flavor').value.trim();
+            const allergies = document.getElementById('allergies').value.trim();
+
+            if (!flavor) {
+                displayMessage('Flavor suggestion cannot be empty!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/add_customer_suggestion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ flavor: flavor, allergies: allergies })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to submit suggestion');
+                }
+                displayMessage(result.message || 'Suggestion added successfully!', 'success');
+            } catch (error) {
+                displayMessage('An error occurred: ' + error.message, 'error');
+            }
+        }
+
+        async function viewFlavors() {
+            try {
+                const response = await fetch('/view_flavors');
+                const flavors = await response.json();
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch flavors');
+                }
+
+                const flavorsList = document.getElementById('flavors-list');
+                flavorsList.innerHTML = `<h3>Flavors List</h3>`;
+                flavors.forEach(flavor => {
+                    flavorsList.innerHTML += `<p>${flavor.name} - Seasonal: ${flavor.seasonal ? 'Yes' : 'No'}</p>`;
+                });
+            } catch (error) {
+                displayMessage('An error occurred: ' + error.message, 'error');
+            }
+        }
+
+        async function viewIngredients() {
+            try {
+                const response = await fetch('/view_ingredients');
+                const ingredients = await response.json();
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch ingredients');
+                }
+
+                const ingredientsList = document.getElementById('ingredients-list');
+                ingredientsList.innerHTML = `<h3>Ingredients List</h3>`;
+                ingredients.forEach(ingredient => {
+                    ingredientsList.innerHTML += `<p>${ingredient.name}: ${ingredient.quantity}</p>`;
+                });
+            } catch (error) {
+                displayMessage('An error occurred: ' + error.message, 'error');
+            }
+        }
+
+        async function viewSuggestions() {
+            try {
+                const response = await fetch('/view_customer_suggestions');
+                const suggestions = await response.json();
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch suggestions');
+                }
+
+                const suggestionsList = document.getElementById('suggestions-list');
+                suggestionsList.innerHTML = `<h3>Customer Suggestions</h3>`;
+                suggestions.forEach(suggestion => {
+                    suggestionsList.innerHTML += `<p>Flavor: ${suggestion.flavor}, Allergies: ${suggestion.allergies || 'None'}</p>`;
+                });
+            } catch (error) {
+                displayMessage('An error occurred: ' + error.message, 'error');
+            }
+        }
+
+        function displayMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.style.color = type === 'success' ? 'green' : 'red';
+        }
+    </script>
+</body>
+</html>
