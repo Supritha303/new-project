@@ -1,8 +1,10 @@
 Creating a Simple Python Application for a fictional chocolate house that uses
 SQLite to manage,
+
 ● Seasonal flavor offerings
 ● Ingredient inventory
 ● Customer flavor suggestions and allergy concerns
+
 STEPS:
 1.Database Setup: Create an SQLite database and define tables for flavors, ingredients, and customer suggestions.
 2.Data Insertion: Populate the tables with initial data.
